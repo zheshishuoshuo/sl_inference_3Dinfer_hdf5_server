@@ -32,12 +32,21 @@ import h5py
 from scipy.stats import norm
 from tqdm import tqdm
 
-from .config import SCATTER
-from .mock_generator.lens_model import LensModel
-from .mock_generator.lens_solver import solve_single_lens, solve_lens_parameters_from_obs
-from .mock_generator.mass_sampler import MODEL_PARAMS, generate_samples
-from .utils import selection_function
-from .build_k_table import load_K_interpolator
+# Support both package-relative and direct execution imports
+try:
+    from .config import SCATTER
+    from .mock_generator.lens_model import LensModel
+    from .mock_generator.lens_solver import solve_single_lens, solve_lens_parameters_from_obs
+    from .mock_generator.mass_sampler import MODEL_PARAMS, generate_samples
+    from .utils import selection_function
+    from .build_k_table import load_K_interpolator
+except ImportError:  # fallback when run as a top-level script
+    from config import SCATTER
+    from mock_generator.lens_model import LensModel
+    from mock_generator.lens_solver import solve_single_lens, solve_lens_parameters_from_obs
+    from mock_generator.mass_sampler import MODEL_PARAMS, generate_samples
+    from utils import selection_function
+    from build_k_table import load_K_interpolator
 
 # -----------------------------------------------------------------------------
 # Sampling utilities
@@ -194,6 +203,9 @@ def compute_A_eta(
     ms_points: int = 30,
     m_lim: float = 26.5,
     n_jobs: int | None = None,
+    *,
+    alpha_grid_override: np.ndarray | None = None,
+    output_suffix: str = "",
 ):
     """Monte Carlo estimate of the 3D normalisation grid ``A(eta)``.
 
@@ -210,8 +222,14 @@ def compute_A_eta(
     (
         mu_DM_grid,
         mu_gamma_grid,
-        alpha_grid,
+        alpha_grid_default,
     ) = build_eta_grid()
+
+    # Optionally override alpha grid
+    if alpha_grid_override is not None:
+        alpha_grid = np.asarray(alpha_grid_override)
+    else:
+        alpha_grid = alpha_grid_default
 
     A_accum = np.zeros(
         (
@@ -285,12 +303,11 @@ def compute_A_eta(
     A = Mh_range * A_accum / n_samples
 
     # ---- Write to HDF5 (3D: mu_DM, mu_gamma, alpha) ----
-    out_dir = os.path.join(os.path.dirname(__file__), "aeta_tables")
-    os.makedirs(out_dir, exist_ok=True)
+    # Output to current working directory; add optional suffix to avoid overwrite
     fname = (
-        f"Aeta3D_mu{mu_DM_grid.size}_mugamma{mu_gamma_grid.size}_alpha{alpha_grid.size}.h5"
+        f"Aeta3D_mu{mu_DM_grid.size}_mugamma{mu_gamma_grid.size}_alpha{alpha_grid.size}{output_suffix}.h5"
     )
-    out_path = os.path.join(out_dir, fname)
+    out_path = os.path.join(os.getcwd(), fname)
 
     with h5py.File(out_path, "w") as f:
         # Metadata group
