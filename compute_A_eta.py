@@ -185,7 +185,7 @@ def ms_distribution(ms_grid: np.ndarray, alpha_s: float = -1.3, ms_star: float =
 def build_eta_grid():
     """Return default 3D grids for ``mu_DM``, ``mu_gamma``, ``alpha``."""
 
-    N = 100
+    N = 200
 
     mu_DM_grid = np.linspace(12, 14, N)
     mu_gamma_grid = np.linspace(0.5, 1.5, N)
@@ -199,8 +199,8 @@ def build_eta_grid():
 # 'sigma_h': 0.37
 
 def compute_A_eta(
-    n_samples: int = 100000,
-    ms_points: int = 30,
+    n_samples: int = 1000000,
+    ms_points: int = 200,
     m_lim: float = 26.5,
     n_jobs: int | None = None,
     *,

@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -N mcmc
+#PBS -m abe
+#PBS -M zhangshuo01@sjtu.edu.cn
+#PBS -l nodes=4:ppn=72
+#PBS -l mem=1200gb
+#PBS -l walltime=40:00:00
+#PBS -q normal
+#PBS -j oe
+#PBS -o /home/shuoz/sl_inference_3Dinfer_hdf5_server/mcmc.log
+
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate base
+
+cd $PBS_O_WORKDIR
+rm mcmc.log
+echo 1
+cd /home/shuoz/
+python3 -m sl_inference_3Dinfer_hdf5_server.main
+echo 2

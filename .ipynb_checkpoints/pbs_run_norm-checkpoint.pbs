@@ -1,0 +1,21 @@
+#!/bin/bash
+#PBS -N norm
+#PBS -m abe
+#PBS -M zhangshuo01@sjtu.edu.cn
+#PBS -l nodes=1:ppn=72
+#PBS -l mem=350gb
+#PBS -l walltime=40:00:00
+#PBS -q normal
+#PBS -t 0-5
+#PBS -j oe
+#PBS -o /home/shuoz/sl_inference_3Dinfer_hdf5_server/norm_${PBS_ARRAYID}.log
+
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate base
+
+cd $PBS_O_WORKDIR
+echo "Task ${PBS_ARRAYID} starting on host $(hostname)"
+
+python3 compute_A_eta_part.py $PBS_ARRAYID 6
+
+echo "Task ${PBS_ARRAYID} finished"
