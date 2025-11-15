@@ -286,9 +286,9 @@ def compute_A_eta(
                 continue
 
             # Vectorised halo-mass probability across (mu_DM) with fixed scatter 0.3
-            mean_Mh = mu_DM_grid  # (N_mu,)
-            sigma_Mh = 0.3
-            p_Mh = np.exp(-0.5 * ((logMh_i - mean_Mh) / sigma_Mh) ** 2) / (sigma_Mh * np.sqrt(2 * np.pi))
+            # mean_Mh = mu_DM_grid  # (N_mu,)
+            # sigma_Mh = 0.37
+            # p_Mh = np.exp(-0.5 * ((logMh_i - mean_Mh) / sigma_Mh) ** 2) / (sigma_Mh * np.sqrt(2 * np.pi))
 
             # Select precomputed p_gamma for this sample i, shape (N_mu_gamma,)
             p_gamma = p_gamma_table[:, i]
