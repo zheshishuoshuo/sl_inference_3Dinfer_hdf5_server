@@ -287,7 +287,6 @@ def compute_A_eta(
         for j, i in tqdm(enumerate(valid_idx), desc="valid index loop", total=valid.sum()):
             logM_sps_i = samples["logM_star_sps"][i]
             logMh_i = samples["logMh"][i]
-            logRe_i = samples["logRe"][i]
             w_i = float(w_static[j])
             if not (np.isfinite(w_i) and w_i > 0):
                 continue
