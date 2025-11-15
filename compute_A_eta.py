@@ -201,7 +201,7 @@ def build_eta_grid():
 # 'sigma_h': 0.37
 
 def compute_A_eta(
-    n_samples: int = 1000000,
+    n_samples: int = 100000,
     ms_points: int = 200,
     m_lim: float = 26.5,
     n_jobs: int | None = None,

@@ -61,6 +61,8 @@ except ImportError:  # fallback when run as a top-level script
 #     return_arrays: bool = False,
 # ):
 
+MODEL_P = MODEL_PARAMS["deVauc"]
+
 # Preload K(mu1, mu2) interpolator (integrated over source magnitude with prior)
 K_interp = load_K_interpolator(
     os.path.join(os.path.dirname(__file__), "K_K_table_mu1000_ms2000.h5"),
@@ -199,7 +201,7 @@ def build_eta_grid():
 # 'sigma_h': 0.37
 
 def compute_A_eta(
-    n_samples: int = 1000000,
+    n_samples: int = 100000,
     ms_points: int = 200,
     m_lim: float = 26.5,
     n_jobs: int | None = None,
@@ -278,6 +280,10 @@ def compute_A_eta(
         # ---- T3: halo-mass + gamma relation for each (muDM, mu_gamma) ----
         valid_idx = np.where(valid)[0]
 
+        # Parameters for halo-mass relation from mass_sampler (ensure consistency)
+        betaDM = MODEL_P["beta_h"]
+        sigmaDM = MODEL_P["sigma_h"]
+
         for j, i in tqdm(enumerate(valid_idx), desc="valid index loop", total=valid.sum()):
             logM_sps_i = samples["logM_star_sps"][i]
             logMh_i = samples["logMh"][i]
@@ -285,10 +291,14 @@ def compute_A_eta(
             if not (np.isfinite(w_i) and w_i > 0):
                 continue
 
-            # Vectorised halo-mass probability across (mu_DM) with fixed scatter 0.3
-            # mean_Mh = mu_DM_grid  # (N_mu,)
-            # sigma_Mh = 0.37
-            # p_Mh = np.exp(-0.5 * ((logMh_i - mean_Mh) / sigma_Mh) ** 2) / (sigma_Mh * np.sqrt(2 * np.pi))
+            # Vectorised halo-mass probability across (mu_DM) consistent with mass_sampler
+            # mean_Mh = mu_DM + betaDM*(logM_sps - 11.4) + xiDM*(logRe - mu_r)
+
+            mean_Mh = (
+                mu_DM_grid
+                + betaDM * (logM_sps_i - 11.4)
+            )
+            p_Mh = np.exp(-0.5 * ((logMh_i - mean_Mh) / sigmaDM) ** 2) / (sigmaDM * np.sqrt(2 * np.pi))
 
             # Select precomputed p_gamma for this sample i, shape (N_mu_gamma,)
             p_gamma = p_gamma_table[:, i]

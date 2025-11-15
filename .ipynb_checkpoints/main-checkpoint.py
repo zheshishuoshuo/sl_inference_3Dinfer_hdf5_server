@@ -38,10 +38,10 @@ def build_dm_grid2d(
     *,
     logMh_min: float = 11.0,
     logMh_max: float = 15.0,
-    n_logMh: int = 50,
+    n_logMh: int = 30,
     gamma_min: float = 0.4,
     gamma_max: float = 1.6,
-    n_gamma: int = 50,
+    n_gamma: int = 30,
 ) -> DMGrid2D:
     """Construct a reusable 2D grid over (logMh, gamma_h).
 
@@ -107,7 +107,7 @@ def main(
     seed = 420
 
     # default sample size (can override via CLI)
-    n_galaxy = int(n_galaxy) if n_galaxy is not None else 200000
+    n_galaxy = int(n_galaxy) if n_galaxy is not None else 10000
 
     print(f"Generating mock data with {n_galaxy} galaxies, logalpha={logalpha}, seed={seed} ...")
      # 4e-4 for 200k
