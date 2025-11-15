@@ -283,6 +283,8 @@ def compute_A_eta(
         # Parameters for halo-mass relation from mass_sampler (ensure consistency)
         betaDM = MODEL_P["beta_h"]
         sigmaDM = MODEL_P["sigma_h"]
+        mu_R0 = MODEL_P["mu_R0"]
+        beta_R = MODEL_P["beta_R"]
 
         for j, i in tqdm(enumerate(valid_idx), desc="valid index loop", total=valid.sum()):
             logM_sps_i = samples["logM_star_sps"][i]

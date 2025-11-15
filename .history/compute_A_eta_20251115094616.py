@@ -283,6 +283,8 @@ def compute_A_eta(
         # Parameters for halo-mass relation from mass_sampler (ensure consistency)
         betaDM = MODEL_P["beta_h"]
         sigmaDM = MODEL_P["sigma_h"]
+        mu_R0 = MODEL_P["mu_R0"]
+        beta_R = MODEL_P["beta_R"]
 
         for j, i in tqdm(enumerate(valid_idx), desc="valid index loop", total=valid.sum()):
             logM_sps_i = samples["logM_star_sps"][i]
@@ -294,7 +296,7 @@ def compute_A_eta(
 
             # Vectorised halo-mass probability across (mu_DM) consistent with mass_sampler
             # mean_Mh = mu_DM + betaDM*(logM_sps - 11.4) + xiDM*(logRe - mu_r)
-
+            mu_r_i = mu_R0 + beta_R * (logM_sps_i - 11.4)
             mean_Mh = (
                 mu_DM_grid
                 + betaDM * (logM_sps_i - 11.4)
