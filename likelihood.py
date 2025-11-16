@@ -34,7 +34,7 @@ A_INTERP: Optional[Callable[[Sequence[float]], float]] = None
 # Load the new 3D A(eta) table with dynamic filename based on grid sizes
 _mu_DM_grid, _mu_gamma_grid, _alpha_grid = build_eta_grid()
 
-_fname = f"Aeta3D_merged_better.h5"
+_fname = f"Aeta3D_merged_best.h5"
 
 file_path = os.path.join(os.path.dirname(__file__), 'aeta_tables', _fname)
 A_INTERP = load_A_eta_interpolator(file_path)
@@ -88,9 +88,9 @@ def log_prior(theta: Sequence[float]) -> float:
 
     if not (-0.3 <= alpha_sps <= 0.3):
         return -np.inf
-    if not (12.0 <= mu_h <= 14.0):
+    if not (12.5 <= mu_h <= 13.5):
         return -np.inf
-    if not (0.5 <= mu_gamma <= 1.5):
+    if not (0.6 <= mu_gamma <= 1.4):
         return -np.inf
 
     return 0.0

@@ -39,8 +39,8 @@ def build_dm_grid2d(
     logMh_min: float = 11.0,
     logMh_max: float = 15.0,
     n_logMh: int = 50,
-    gamma_min: float = -1,
-    gamma_max: float = 3,
+    gamma_min: float = 0,
+    gamma_max: float = 2,
     n_gamma: int = 50,
 ) -> DMGrid2D:
     """Construct a reusable 2D grid over (logMh, gamma_h).
@@ -107,7 +107,7 @@ def main(
     seed = 420
 
     # default sample size (can override via CLI)
-    n_galaxy = int(n_galaxy) if n_galaxy is not None else 20000
+    n_galaxy = int(n_galaxy) if n_galaxy is not None else 2000
 
     print(f"Generating mock data with {n_galaxy} galaxies, logalpha={logalpha}, seed={seed} ...")
      # 4e-4 for 200k
@@ -115,6 +115,7 @@ def main(
         n_galaxy,
           logalpha=logalpha, seed=seed, nbkg=4e-4, if_source=True
     )
+    print("mean value of gammain:", np.mean(mock_lens_data["gamma_in"]))
     # print(np.mean(mock_lens_data["logM_halo"].values))
     # print(mock_lens_data.shape)
     # logM_sps_obs = mock_observed_data["logM_star_sps_observed"].values
