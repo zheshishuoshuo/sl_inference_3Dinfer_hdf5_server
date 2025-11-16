@@ -92,12 +92,12 @@ def sample_lens_population(n_samples: int, zl: float = 0.3, zs: float = 2.0):
     data = generate_samples(n_samples)
     logM_star_sps = data["logM_star_sps"]
     logRe = data["logRe"]
-    gamma_in = np.random.rand(n_samples) * 2.0  # uniform in [0, 2]
+    gamma_in = np.random.rand(n_samples) * 4.0 - 1  # uniform in [0, 2]
     c_halo = data["c_halo"]
     
     beta_unit = np.random.rand(n_samples)**0.5
     # Uniform proposal for halo mass to allow importance reweighting
-    logMh_min, logMh_max = 11.0, 15.0
+    logMh_min, logMh_max = 10.0, 16.0
     logMh = np.random.uniform(logMh_min, logMh_max, n_samples)
 
     return {
@@ -187,10 +187,10 @@ def ms_distribution(ms_grid: np.ndarray, alpha_s: float = -1.3, ms_star: float =
 def build_eta_grid():
     """Return default 3D grids for ``mu_DM``, ``mu_gamma``, ``alpha``."""
 
-    N = 200
+    N = 50
 
-    mu_DM_grid = np.linspace(12, 14, N)
-    mu_gamma_grid = np.linspace(0.5, 1.5, N)
+    mu_DM_grid = np.linspace(12.5, 13.5, N)
+    mu_gamma_grid = np.linspace(0.6, 1.4, N)
     alpha_grid = np.linspace(-0.3, 0.3, N)
 
     return mu_DM_grid, mu_gamma_grid, alpha_grid
@@ -201,7 +201,7 @@ def build_eta_grid():
 # 'sigma_h': 0.37
 
 def compute_A_eta(
-    n_samples: int = 100000,
+    n_samples: int = 500000,
     ms_points: int = 200,
     m_lim: float = 26.5,
     n_jobs: int | None = None,
