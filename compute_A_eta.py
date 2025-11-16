@@ -92,7 +92,8 @@ def sample_lens_population(n_samples: int, zl: float = 0.3, zs: float = 2.0):
     data = generate_samples(n_samples)
     logM_star_sps = data["logM_star_sps"]
     logRe = data["logRe"]
-    gamma_in = np.random.rand(n_samples) * 4.0 - 1  # uniform in [0, 2]
+    rng = np.random.default_rng()
+    gamma_in = rng.normal(loc=1.0, scale=0.5, size=n_samples)
     c_halo = data["c_halo"]
     
     beta_unit = np.random.rand(n_samples)**0.5
@@ -244,10 +245,17 @@ def compute_A_eta(
 
     # Precompute p_gamma over all mu_gamma for every sample with fixed scatter 0.2
     # Shape: (N_mu_gamma, n_samples)
-    gamma_in = samples["gamma_in"][None, :]
+    gamma_samples = samples["gamma_in"]
+    gamma_in = gamma_samples[None, :]
     MU_G = mu_gamma_grid[:, None]
     SG_G = 0.2
     p_gamma_table = np.exp(-0.5 * ((gamma_in - MU_G) / SG_G) ** 2) / (SG_G * np.sqrt(2 * np.pi))
+
+    # Proposal density q_gamma and importance weights for gamma
+    mu_prop = 1.0
+    sigma_prop = 0.5
+    q_gamma = norm.pdf(gamma_samples, loc=mu_prop, scale=sigma_prop)
+    w_gamma_imp = 1.0 / q_gamma
 
     for a_idx, alpha in enumerate(tqdm(alpha_grid, desc="alpha loop")):
         # Mstar used in lensing is Msps + alpha
@@ -303,9 +311,12 @@ def compute_A_eta(
             # Select precomputed p_gamma for this sample i, shape (N_mu_gamma,)
             p_gamma = p_gamma_table[:, i]
 
+            # Importance sampling weight for gamma proposal
+            w_gamma_i = w_gamma_imp[i]
+
             # Accumulate with outer product over (mu_DM, mu_gamma)
             # Result aligns with A_accum[:, :, a_idx]
-            A_accum[:, :, a_idx] += w_i * np.outer(p_Mh, p_gamma)
+            A_accum[:, :, a_idx] += w_i * w_gamma_i * np.outer(p_Mh, p_gamma)
 
 
 
