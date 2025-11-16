@@ -100,6 +100,7 @@ def write_run_hdf5(
     grids: Sequence[Any],  # LensGrid list
     emcee_backend_path: Path | str | None,
     exports: Dict[str, np.ndarray] | None,
+    mock_lens_data=None,
 ) -> Path:
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,6 +185,17 @@ def write_run_hdf5(
             ]
             rec = observed_table_df[ocols].to_records(index=False)
             gob.create_dataset("table", data=rec, compression="gzip")
+
+        # ground-truth lens properties used to generate the mock sample
+        if mock_lens_data is not None:
+            gtruth = f.create_group("truth")
+            # Support both dict-like and DataFrame inputs
+            try:
+                items = mock_lens_data.items()
+            except AttributeError:
+                items = getattr(mock_lens_data, "to_dict", lambda **_: {})(orient="list").items()
+            for k, v in items:
+                gtruth.create_dataset(k, data=np.asarray(v), compression="gzip")
 
         # kernel/grids export: prefer new 2D kernel if available
         if grids is not None and len(grids) > 0 and hasattr(grids[0], "logMh_axis") and hasattr(grids[0], "gamma_h_axis"):

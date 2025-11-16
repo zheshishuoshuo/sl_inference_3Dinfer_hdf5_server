@@ -292,6 +292,7 @@ def main(
             grids=grids,
             emcee_backend_path=emcee_backend_path,
             exports=exports,
+            mock_lens_data=mock_lens_data,
         )
         print(f"Saved run results to: {run_filename}")
     except Exception as e:
