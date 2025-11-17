@@ -190,9 +190,9 @@ def build_eta_grid():
 
     N = 200
 
-    mu_DM_grid = np.linspace(12.5, 13.5, N)
-    mu_gamma_grid = np.linspace(0.6, 1.4, N)
-    alpha_grid = np.linspace(-0.3, 0.3, N)
+    mu_DM_grid = np.linspace(12.6, 13.2, N)
+    mu_gamma_grid = np.linspace(0.8, 1.2, N)
+    alpha_grid = np.linspace(-0.05, 0.05, N)
 
     return mu_DM_grid, mu_gamma_grid, alpha_grid
 
@@ -203,7 +203,7 @@ def build_eta_grid():
 
 def compute_A_eta(
     n_samples: int = 500000,
-    ms_points: int = 200,
+    ms_points: bool = None,
     m_lim: float = 26.5,
     n_jobs: int | None = None,
     *,
