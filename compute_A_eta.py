@@ -188,7 +188,7 @@ def ms_distribution(ms_grid: np.ndarray, alpha_s: float = -1.3, ms_star: float =
 def build_eta_grid():
     """Return default 3D grids for ``mu_DM``, ``mu_gamma``, ``alpha``."""
 
-    N = 50
+    N = 200
 
     mu_DM_grid = np.linspace(12.5, 13.5, N)
     mu_gamma_grid = np.linspace(0.6, 1.4, N)

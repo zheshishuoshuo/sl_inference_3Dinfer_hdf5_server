@@ -107,7 +107,7 @@ def main(
     seed = 420
 
     # default sample size (can override via CLI)
-    n_galaxy = int(n_galaxy) if n_galaxy is not None else 2000
+    n_galaxy = int(n_galaxy) if n_galaxy is not None else 300000
 
     print(f"Generating mock data with {n_galaxy} galaxies, logalpha={logalpha}, seed={seed} ...")
      # 4e-4 for 200k
@@ -292,6 +292,7 @@ def main(
             grids=grids,
             emcee_backend_path=emcee_backend_path,
             exports=exports,
+            mock_lens_data=mock_lens_data,
         )
         print(f"Saved run results to: {run_filename}")
     except Exception as e:
