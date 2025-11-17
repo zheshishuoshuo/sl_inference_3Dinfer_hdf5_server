@@ -20,43 +20,24 @@ except Exception:  # pragma: no cover - optional dependency
 
 import multiprocessing
 
-# Per-process RNG for multiprocessing workers
-_LOCAL_RNG: np.random.Generator | None = None
-
-
-def _init_worker_seed(base_seed: int | None) -> None:
-    """Top-level initializer for multiprocessing workers.
-
-    Sets up a per-process NumPy Generator and also seeds numpy/random.
-    Placed at module scope so it is picklable by multiprocessing on
-    spawn-based platforms (e.g., macOS, Windows, Python 3.12+).
-
-    Parameters
-    ----------
-    base_seed : int | None
-        If provided, every worker uses the same seed value to ensure
-        identical initialisation across processes. If None, a default
-        Generator is created without explicit seeding.
-    """
-    global _LOCAL_RNG
-    if base_seed is None:
-        _LOCAL_RNG = np.random.default_rng()
-        return
-    s = int(base_seed)
-    np.random.seed(s)
-    _LOCAL_RNG = np.random.default_rng(s)
-    random.seed(s)
-
 
 def _sim_star(args):
     return simulate_single_lens(*args)
 
 
-def simulate_single_lens(i, samples, logalpha_sps_sample,
-                        maximum_magnitude, zl, zs, nbkg,
-                        alpha_s, m_s_star,
-                        rng: np.random.Generator | None = None,
-                        **kwargs):
+def simulate_single_lens(
+    i,
+    samples,
+    logalpha_sps_sample,
+    maximum_magnitude,
+    zl,
+    zs,
+    nbkg,
+    alpha_s,
+    m_s_star,
+    rng: np.random.Generator,
+    **kwargs,
+):
     if 'gamma_dm' in kwargs:
         raise ValueError("gamma_dm is no longer supported; use gamma_in.")
     """Simulate all sources for a single lens.
@@ -107,11 +88,9 @@ def simulate_single_lens(i, samples, logalpha_sps_sample,
         return result, i
         
 
-    # Choose RNG: prefer explicit one; fall back to per-process RNG
-    local_rng = rng if rng is not None else _LOCAL_RNG
-    if local_rng is None:
-        local_rng = np.random.default_rng()
-    
+    # Lens-specific RNG (must be provided by caller)
+    local_rng = rng
+
     lambda_i = np.pi * ycaust_kpc**2 * nbkg
     N_i = local_rng.poisson(lambda_i)
 
@@ -214,16 +193,23 @@ def run_mock_simulation(
         Surface density of background sources in ``kpc^-2``.
     """
 
-    # Determine effective seed; create a single unified Generator for NumPy
+    # Determine effective base seed used to initialise per-lens RNGs
     effective_seed = 12345 if deterministic else seed
-    rng = np.random.default_rng(int(effective_seed)) if effective_seed is not None else np.random.default_rng()
+    if effective_seed is None:
+        # Fall back to a random 32-bit seed if the user does not supply one.
+        # This preserves previous behaviour where omitting `seed` leads to
+        # non-deterministic simulations.
+        effective_seed = int(np.random.SeedSequence().entropy)
+    base_seed = int(effective_seed)
+
+    # Use a single RNG seeded by base_seed for generating the global samples.
+    rng_global = np.random.default_rng(base_seed)
     # Keep Python's builtin random in sync for any incidental usage elsewhere
-    if effective_seed is not None:
-        random.seed(int(effective_seed))
+    random.seed(base_seed)
 
     logalpha_sps_sample = np.full(n_samples, logalpha)
     # Use the unified RNG for generating base samples
-    samples = generate_samples(n_samples, rng=rng)
+    samples = generate_samples(n_samples, rng=rng_global)
 
     # gamma_dm removed: only gamma_in is used/propagated
 
@@ -270,8 +256,19 @@ def run_mock_simulation(
         lens_results = [] if not use_cache else None
         columns = None  # columnar accumulation when not caching
         for i in tqdm(range(n_samples), desc="Processing lenses"):
+            # Lens-specific RNG: deterministic for fixed base_seed and lens id
+            lens_rng = np.random.default_rng(base_seed + int(i))
             result, idx = simulate_single_lens(
-                i, samples, logalpha_sps_sample, maximum_magnitude, zl, zs, nbkg, alpha_s, m_s_star, rng,
+                i,
+                samples,
+                logalpha_sps_sample,
+                maximum_magnitude,
+                zl,
+                zs,
+                nbkg,
+                alpha_s,
+                m_s_star,
+                lens_rng,
             )
             if use_cache:
                 buffer.append(result)
@@ -297,18 +294,25 @@ def run_mock_simulation(
             m_s_array[idx] = np.nan if m_s_val is None else m_s_val
             beta_unit_array[idx] = np.nan if beta_val is None else beta_val
     else:
-        # Multiprocessing path: use a global initializer to avoid pickling issues
+        # Multiprocessing path: build per-lens arguments including
+        # a lens-specific RNG seed = base_seed + lens_id.
         args = [
-            (i, samples, logalpha_sps_sample, maximum_magnitude, zl, zs, nbkg,
-             alpha_s, m_s_star, None)
+            (
+                i,
+                samples,
+                logalpha_sps_sample,
+                maximum_magnitude,
+                zl,
+                zs,
+                nbkg,
+                alpha_s,
+                m_s_star,
+                np.random.default_rng(base_seed + int(i)),
+            )
             for i in range(n_samples)
         ]
         ctx = multiprocessing.get_context("spawn")
-        pool = ctx.Pool(
-            process,
-            initializer=_init_worker_seed,
-            initargs=(int(effective_seed) if effective_seed is not None else None,)
-        )
+        pool = ctx.Pool(process)
         with pool:
             it = pool.imap_unordered(_sim_star, args, chunksize=128)
             pbar = tqdm(total=n_samples, desc=f"Processing lenses (process={process})")
