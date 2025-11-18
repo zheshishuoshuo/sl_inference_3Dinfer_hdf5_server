@@ -14,7 +14,8 @@ import multiprocessing as mp
 
 
 N_LENS_DEFAULT = 1000
-N_CPU = max(1, mp.cpu_count() - 2)
+N_CPU = 
+
 
 def _list_existing_mocks(index: int) -> List[Path]:
     mock_dir = get_mock_dir(index)
@@ -125,7 +126,6 @@ def generate_or_load_mock(
         seed=seed,
         nbkg=4e-4,
         if_source=True,
-        process=N_CPU,
     )
     # Keep only lensed subset in output (consistent with main)
     mock_lens_data = mock_lens_data.copy()

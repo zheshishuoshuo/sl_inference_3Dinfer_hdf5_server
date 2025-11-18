@@ -10,11 +10,11 @@ import h5py
 from ..mock_generator.mock_generator import run_mock_simulation
 from ..config import SCATTER  # noqa: F401  # imported for consistency / future use
 from .config_test import get_mock_dir, utc_timestamp
-import multiprocessing as mp
 
 
 N_LENS_DEFAULT = 1000
-N_CPU = max(1, mp.cpu_count() - 2)
+N
+
 
 def _list_existing_mocks(index: int) -> List[Path]:
     mock_dir = get_mock_dir(index)
@@ -125,7 +125,6 @@ def generate_or_load_mock(
         seed=seed,
         nbkg=4e-4,
         if_source=True,
-        process=N_CPU,
     )
     # Keep only lensed subset in output (consistent with main)
     mock_lens_data = mock_lens_data.copy()

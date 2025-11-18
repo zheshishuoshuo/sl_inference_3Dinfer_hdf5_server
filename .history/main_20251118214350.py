@@ -114,7 +114,7 @@ def main(
      # 4e-4 for 200k
     df_lens, mock_lens_data, mock_observed_data, samples_dict = run_mock_simulation(
         n_galaxy,
-          logalpha=logalpha, seed=seed, nbkg=4e-4, if_source=True, process=n_cpu
+          logalpha=logalpha, seed=seed, nbkg=4e-4, if_source=True
     )
     print("mean value of gammain:", np.mean(mock_lens_data["gamma_in"]))
     # print(np.mean(mock_lens_data["logM_halo"].values))
