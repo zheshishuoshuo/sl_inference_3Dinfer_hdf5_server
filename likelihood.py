@@ -34,7 +34,7 @@ A_INTERP: Optional[Callable[[Sequence[float]], float]] = None
 # Load the new 3D A(eta) table with dynamic filename based on grid sizes
 _mu_DM_grid, _mu_gamma_grid, _alpha_grid = build_eta_grid()
 
-_fname = f"Aeta3D_merged_new_large.h5"
+_fname = f"Aeta3D_merged_new_large_precise.h5"
 
 file_path = os.path.join(os.path.dirname(__file__), 'aeta_tables', _fname)
 A_INTERP = load_A_eta_interpolator(file_path)
