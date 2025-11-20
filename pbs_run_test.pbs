@@ -7,7 +7,7 @@
 #PBS -l walltime=40:00:00
 #PBS -q normal
 #PBS -j oe
-#PBS -o /home/shuoz/sl_inference_3Dinfer_hdf5_server/two_tabulate1.log
+#PBS -o /home/shuoz/sl_inference_3Dinfer_hdf5_server/two_tabulate4.log
 
 source ~/miniconda3/etc/profile.d/conda.sh
 conda activate base
@@ -17,8 +17,8 @@ echo "Start PBS job"
 
 cd /home/shuoz
 
-echo "Generating mock + tabulate for index 2"
-python3 -m sl_inference_3Dinfer_hdf5_server.tests_eta.run_all --index 2 --force-new-mock
+echo "Generating mock + tabulate for index 4"
+python3 -m sl_inference_3Dinfer_hdf5_server.tests_eta.run_all --index 4 --force-new-mock
 
 
 echo "All done."

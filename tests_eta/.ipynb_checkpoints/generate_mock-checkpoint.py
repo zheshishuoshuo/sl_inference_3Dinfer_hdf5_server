@@ -13,7 +13,7 @@ from .config_test import get_mock_dir, utc_timestamp
 import multiprocessing as mp
 
 
-N_LENS_DEFAULT = 200000
+N_LENS_DEFAULT = 600000
 N_CPU = max(1, mp.cpu_count() - 2)
 
 

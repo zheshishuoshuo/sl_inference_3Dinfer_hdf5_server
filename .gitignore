@@ -1,3 +1,6 @@
 aeta_tables/
 chains/
 test_notebook/
+*log
+*pbs
+tests_eta/data/
