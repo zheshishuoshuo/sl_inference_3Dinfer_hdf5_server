@@ -9,6 +9,8 @@ import h5py
 from ..make_tabulate import LensGrid2D
 from ..likelihood import log_likelihood as _log_likelihood_with_A
 from ..likelihood import log_prior
+from ..compute_A_eta import compute_A_single_eta
+from tqdm import tqdm
 
 
 def load_grids_from_hdf5(grids_path: Path) -> List[LensGrid2D]:
@@ -77,8 +79,50 @@ def _build_eta_vector(
     return [float(alpha_sps), float(mu_h), float(mu_gamma)]
 
 
-def _select_ll_func(use_A_eta: bool) -> Callable[[Sequence[float], Sequence[LensGrid2D]], float]:
-    return _log_likelihood_with_A if use_A_eta else _log_likelihood_no_A
+def _log_likelihood_with_A_direct(
+    eta: Sequence[float],
+    grids: Sequence[LensGrid2D],
+) -> float:
+    """
+    Version of log_likelihood that includes A(eta) but computes A(eta)
+    on-the-fly via compute_A_single_eta instead of using the interpolated table.
+    """
+    from ..likelihood import single_lens_likelihood
+
+    if len(eta) != 3:
+        return -np.inf
+
+    alpha_sps, mu_h, mu_gamma = map(float, eta)
+
+    # A(eta) evaluated directly via Monte Carlo (3D ordering: mu_h, mu_gamma, alpha_sps)
+    A_eta = compute_A_single_eta(mu_DM=mu_h, mu_gamma=mu_gamma, alpha=alpha_sps)
+    if np.isnan(A_eta) or A_eta <= 0.0:
+        raise ValueError("A(eta) is non-positive or NaN." + str(eta) + str(A_eta))
+
+    # Per-lens likelihoods reusing the main likelihood implementation
+    results = [single_lens_likelihood(g, eta) for g in grids]
+    results = np.asarray(results, dtype=float)
+    logLs = np.log(results)
+    total = np.sum(logLs) - len(grids) * np.log(A_eta)
+    return float(total)
+
+
+def _select_ll_func(
+    use_A_eta: bool,
+    use_A_eta_table: bool,
+) -> Callable[[Sequence[float], Sequence[LensGrid2D]], float]:
+    """
+    Select which likelihood implementation to use:
+
+    - use_A_eta = False: likelihood without selection term A(eta)
+    - use_A_eta = True and use_A_eta_table = True: use main interpolated A(eta)
+    - use_A_eta = True and use_A_eta_table = False: compute A(eta) directly
+    """
+    if not use_A_eta:
+        return _log_likelihood_no_A
+    if use_A_eta_table:
+        return _log_likelihood_with_A
+    return _log_likelihood_with_A_direct
 
 
 def compute_1d_loglike(
@@ -89,14 +133,15 @@ def compute_1d_loglike(
     *,
     use_prior: bool = True,
     use_A_eta: bool = True,
+    use_A_eta_table: bool = True,
 ) -> np.ndarray:
     """
     Compute 1D log-likelihood or log-posterior along a given parameter.
     """
-    ll_func = _select_ll_func(use_A_eta)
+    ll_func = _select_ll_func(use_A_eta, use_A_eta_table)
     out = np.empty_like(grid_values, dtype=float)
 
-    for i, val in enumerate(grid_values):
+    for i, val in tqdm(enumerate(grid_values)):
         alpha = fixed_params.get("alpha_sps", 0.0)
         mu_h = fixed_params.get("mu_h", 12.91)
         mu_gamma = fixed_params.get("mu_gamma", 1.0)
@@ -129,11 +174,12 @@ def compute_2d_loglike(
     *,
     use_prior: bool = True,
     use_A_eta: bool = True,
+    use_A_eta_table: bool = True,
 ) -> np.ndarray:
     """
     Compute 2D log-likelihood or log-posterior on a parameter plane.
     """
-    ll_func = _select_ll_func(use_A_eta)
+    ll_func = _select_ll_func(use_A_eta, use_A_eta_table)
     nx = int(len(grid_x))
     ny = int(len(grid_y))
     out = np.empty((ny, nx), dtype=float)

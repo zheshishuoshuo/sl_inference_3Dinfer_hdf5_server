@@ -10,6 +10,7 @@ from ..make_tabulate import LensGrid2D
 from ..likelihood import log_likelihood as _log_likelihood_with_A
 from ..likelihood import log_prior
 from ..compute_A_eta import compute_A_single_eta
+from tqdm import tqdm
 
 
 def load_grids_from_hdf5(grids_path: Path) -> List[LensGrid2D]:
@@ -140,7 +141,7 @@ def compute_1d_loglike(
     ll_func = _select_ll_func(use_A_eta, use_A_eta_table)
     out = np.empty_like(grid_values, dtype=float)
 
-    for i, val in enumerate(grid_values):
+    for i, val in tqdm(enumerate(grid_values)):
         alpha = fixed_params.get("alpha_sps", 0.0)
         mu_h = fixed_params.get("mu_h", 12.91)
         mu_gamma = fixed_params.get("mu_gamma", 1.0)
