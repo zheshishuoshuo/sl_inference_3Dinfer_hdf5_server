@@ -394,5 +394,73 @@ def load_A_eta_interpolator(path: str):
     raise ValueError("Unsupported A_grid dimensionality for 3D A(eta)")
 
 
+def compute_A_single_eta(
+    mu_DM: float,
+    mu_gamma: float,
+    alpha: float,
+    n_samples: int = 20000,
+    n_jobs: int | None = 4,
+) -> float:
+    """Monte Carlo estimate of A(eta) for a single (mu_DM, mu_gamma, alpha).
+
+    The computation mirrors ``compute_A_eta`` but evaluates the integral only
+    for the specified point in parameter space instead of over a 3D grid.
+    """
+
+    # a) Draw Monte Carlo lens population samples
+    samples = sample_lens_population(n_samples)
+
+    # b) Stellar mass used in lensing: Msps + alpha
+    logM_star = samples["logM_star_sps"] + alpha
+
+    # c) Compute magnifications and caustic scale
+    mu1, mu2, betamax = compute_magnifications(
+        logM_star,
+        samples["logRe"],
+        samples["logMh"],
+        samples["gamma_in"],
+        samples["beta"],
+        samples["zl"],
+        samples["zs"],
+        n_jobs=n_jobs,
+    )
+
+    # d) Keep only physically valid configurations
+    valid = (mu1 > 0) & (mu2 > 0) & (betamax > 0)
+    if not np.any(valid):
+        return 0.0
+
+    mu1_valid = mu1[valid]
+    mu2_valid = mu2[valid]
+    betamax_valid = betamax[valid]
+    logMh_valid = samples["logMh"][valid]
+    gamma_valid = samples["gamma_in"][valid]
+
+    # e) Photometric/detection term from K table
+    T1 = K_interp(mu1_valid, mu2_valid)
+
+    # f) Source-position weighting
+    T2 = betamax_valid ** 2
+
+    # g) Halo-mass probability p_Mh = N(logMh | mu_DM, sigma=0.3)
+    sigma_Mh = 0.3
+    p_Mh = norm.pdf(logMh_valid, loc=mu_DM, scale=sigma_Mh)
+
+    # h) Gamma probability p_gamma = N(gamma_in | mu_gamma, sigma=0.2)
+    sigma_gamma = 0.2
+    p_gamma = norm.pdf(gamma_valid, loc=mu_gamma, scale=sigma_gamma)
+
+    # i) Combined weights
+    w = T1 * T2 * p_Mh * p_gamma
+
+    # j) Monte Carlo estimate of A(eta)
+    logMh_min = samples["logMh_min"]
+    logMh_max = samples["logMh_max"]
+    Mh_range = logMh_max - logMh_min
+    A_eta = Mh_range * np.sum(w) / float(n_samples)
+
+    return float(A_eta)
+
+
 if __name__ == "__main__":
     compute_A_eta()

@@ -36,13 +36,8 @@ _mu_DM_grid, _mu_gamma_grid, _alpha_grid = build_eta_grid()
 
 _fname = f"Aeta3D_merged_new_large_precise.h5"
 
-from pathlib import Path
-
-CURRENT_DIR = Path(__file__).resolve().parent
-DATA_DIR = CURRENT_DIR / "aeta_tables"
-file_path = DATA_DIR / _fname
-
-# file_path = os.path.join("../aeta_tables", _fname)
+# file_path = os.path.join(os.path.dirname(__file__), 'aeta_tables', _fname)
+file_path = os.path.join(, 'aeta_tables', _fname)
 A_INTERP = load_A_eta_interpolator(file_path)
 
 def A_interp(eta: Sequence[float]) -> float:
