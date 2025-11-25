@@ -145,7 +145,7 @@ def compute_2d_loglike(
             params[param_y] = float(y)
             eta = _build_eta_vector(
                 params.get("alpha_sps", 0.0),
-                params.get("mu_h", 12.9),
+                params.get("mu_h", 12.91),
                 params.get("mu_gamma", 1.0),
             )
             ll = ll_func(eta, grids)
